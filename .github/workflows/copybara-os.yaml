@@ -54,11 +54,7 @@ jobs:
               echo "Closing PR: $OWNER/$REPO/$OTHER_PR"
               REASON=${{ github.event.pull_request.merged && 'merged' || 'closed' }}
               MESSAGE="This pull request has been closed because it was already $REASON as https://github.com/${{ github.repository }}/pull/${PR_NUMBER}"
-              if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
-                 gh pr comment --repo "$OWNER/$REPO" --body "$MESSAGE" $OTHER_PR
-              else
-                 gh pr close --repo "$OWNER/$REPO" --comment "$MESSAGE" $OTHER_PR
-              fi 
+              gh pr close --repo "$OWNER/$REPO" --comment "$MESSAGE" $OTHER_PR
             fi
           done <<< "$PR_BODY"
         env:
