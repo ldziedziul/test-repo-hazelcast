@@ -7,6 +7,11 @@ on:
     branches:
       - "master"
       - "[0-9]+.[0-9]+.z"
+    types:
+      - reopened
+      - opened
+      - synchronize
+      - closed
   workflow_dispatch:
 env:
   branch_to_sync: ${{ github.base_ref || github.ref_name}}
@@ -35,3 +40,45 @@ jobs:
           destination_repo: ${{ env.destination_repo }}
           copybara_options: "--nogit-destination-rebase"
           custom_config: .github/workflows/copybara-os.sky
+      - name: Close referenced PRs
+        if: github.event.action == 'closed'
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_BODY='${{ github.event.pull_request.body }}'
+          
+          while read -r line; do
+            if [[ $line =~ ^Closes\ ([^/]+)/([^/]+)#([0-9]+) ]]; then
+              OWNER="${BASH_REMATCH[1]}"
+              REPO="${BASH_REMATCH[2]}"
+              OTHER_PR="${BASH_REMATCH[3]}"
+              echo "Closing PR: $OWNER/$REPO/$OTHER_PR"
+              REASON=${{ github.event.pull_request.merged && 'merged' || 'closed' }}
+              MESSAGE="This pull request has been closed because it was already $REASON as https://github.com/${{ github.repository }}/pull/${PR_NUMBER}"
+              if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+                 gh pr comment --repo "$OWNER/$REPO" --body "$MESSAGE" $OTHER_PR
+              else
+                 gh pr close --repo "$OWNER/$REPO" --comment "$MESSAGE" $OTHER_PR
+              fi 
+            fi
+          done <<< "$PR_BODY"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN_WITH_PR_PERMISSIONS }}
+      - name: Reopen referenced PRs
+        if: github.event.action == 'reopened'
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_BODY='${{ github.event.pull_request.body }}'
+          
+          while read -r line; do
+            if [[ $line =~ ^Closes\ ([^/]+)/([^/]+)#([0-9]+) ]]; then
+              OWNER="${BASH_REMATCH[1]}"
+              REPO="${BASH_REMATCH[2]}"
+              OTHER_PR="${BASH_REMATCH[3]}"
+              echo "Reopening PR: $OWNER/$REPO/$OTHER_PR"
+              gh pr reopen --repo "$OWNER/$REPO" \
+               --comment "This pull request has been reopened because of reopening of https://github.com/${{ github.repository }}/pull/${PR_NUMBER}" \
+              $OTHER_PR
+            fi
+          done <<< "$PR_BODY"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN_WITH_PR_PERMISSIONS }}
