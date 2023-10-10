@@ -39,6 +39,20 @@ core.workflow(
     ] + PUSH_TRANSFORMATIONS if PUSH_TRANSFORMATIONS else core.reverse(PR_TRANSFORMATIONS),
 )
 
+def add_comment_with_shadow_pr():
+    """After migration action that notifies in GitHub PRs the status of the import."""
+    return core.dynamic_feedback(
+        impl = _add_comment_with_shadow_pr_impl,
+        params = {},
+    )
+
+def _add_comment_with_shadow_pr_impl(ctx):
+   ctx.console.info("Updating original PR description with info about internal PR")
+   pr_number = ctx.revision.labels["GITHUB_PR_NUMBER"][0]
+   for effect in ctx.effects:
+       if effect.type == "CREATED" and effect.destination_ref != None and effect.destination_ref.url != None:
+              ctx.origin.post_issue_comment(int(pr_number), "Closes " + effect.destination_ref.url.replace("https://github.com/","").replace("/pull/","#"))
+
 # Pull Request workflow
 core.workflow(
     name = "pr",
@@ -63,4 +77,5 @@ core.workflow(
         metadata.expose_label("GITHUB_PR_NUMBER", new_name = "Closes", separator = DESTINATION_REPO.replace("git@github.com:", " ").replace(".git", "#")),
         metadata.save_author("ORIGINAL_AUTHOR"),
     ] + PR_TRANSFORMATIONS,
+    after_workflow = [add_comment_with_shadow_pr()],
 )
