@@ -1,5 +1,6 @@
 #!/bin/bash
-set -e
+
+set -euo pipefail ${RUNNER_DEBUG+-x}
 
 get_labels() {
   local repo=$1
