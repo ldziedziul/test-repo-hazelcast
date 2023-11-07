@@ -1,0 +1,19 @@
+name: Create Tag
+
+on:
+  push:
+    branches:
+      - 'tag-v*'
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Tag
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          TAG_NAME="${BRANCH_NAME#tag-}"          
+          git tag --force $TAG_NAME
+          git push origin --force $TAG_NAME
+          git push origin --delete $BRANCH_NAME
