@@ -1,5 +1,7 @@
 #!/bin/bash
-set -e
+
+set -euo pipefail ${RUNNER_DEBUG:+-x}
+export GH_DEBUG=${RUNNER_DEBUG:+1}
 
 get_milestone() {
   local repo=$1
