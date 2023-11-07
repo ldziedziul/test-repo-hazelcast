@@ -1,5 +1,7 @@
 #!/bin/bash
-set -x
+
+set -euo pipefail ${RUNNER_DEBUG:+-x}
+export GH_DEBUG=${RUNNER_DEBUG:+1}
 
 get_labels() {
   local repo=$1
@@ -29,6 +31,8 @@ LABELS_TO_ADD=$(comm -23 <(echo "$SOURCE_LABELS") <(echo "$TARGET_LABELS") | joi
 LABELS_TO_REMOVE=$(comm -13 <(echo "$SOURCE_LABELS") <(echo "$TARGET_LABELS") | join_with_comma)
 
 if [ -n "$LABELS_TO_ADD" ] || [ -n "$LABELS_TO_REMOVE" ]; then
+  echo "Adding labels: $LABELS_TO_ADD"
+  echo "Removing labels: $LABELS_TO_REMOVE"
   gh pr edit --repo $TARGET_REPO $TARGET_PR --add-label "$LABELS_TO_ADD" --remove-label "$LABELS_TO_REMOVE"
   echo "Labels synchronized from PR $SOURCE_PR to PR $TARGET_PR"
 else
