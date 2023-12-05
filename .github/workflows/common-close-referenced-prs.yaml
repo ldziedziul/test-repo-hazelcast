@@ -22,8 +22,8 @@ jobs:
           
           while read -r line; do
             if [[ $line =~ (Closes|Internal\ PR)\ ([^/]+)/([^/]+)#([0-9]+) ]]; then
-              OWNER="${BASH_REMATCH[1]}"
-              REPO="${BASH_REMATCH[2]}"
+              OWNER="${BASH_REMATCH[2]}"
+              REPO="${BASH_REMATCH[3]}"
               OTHER_PR="${BASH_REMATCH[3]}"
               echo "Closing PR: $OWNER/$REPO/$OTHER_PR"
               REASON=${{ github.event.pull_request.merged && 'merged' || 'closed' }}
