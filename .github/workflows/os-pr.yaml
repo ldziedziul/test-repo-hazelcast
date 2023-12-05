@@ -47,7 +47,7 @@ jobs:
               -e 's#<sot_repo>#${{ env.sot_repo }}#' \
               -e 's#<destination_repo>#${{ env.destination_repo }}#' \
               .github/workflows/common-copybara.bara.sky.template > .github/workflows/common-copybara.bara.sky
-      - uses: ldziedziul/copybara-action@main
+      - uses: hazelcast/copybara-action@main
         name: "Copybara PR #${{ github.event.pull_request.number }} -> ${{ env.branch_to_sync }}"
         with:
           ssh_key: ${{ secrets.GH_DEVOPSHAZELCAST_SSH_KEY }}
