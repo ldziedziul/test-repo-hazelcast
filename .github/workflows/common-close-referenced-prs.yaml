@@ -21,7 +21,7 @@ jobs:
           CONTENT="$(gh pr view --repo ${{ github.repository }} "$PR_NUMBER" --json "body,comments" -q '.body, .comments[].body')"
           
           while read -r line; do
-            if [[ $line =~ Closes\ ([^/]+)/([^/]+)#([0-9]+) ]]; then
+            if [[ $line =~ (Closes|Internal\ PR)\ ([^/]+)/([^/]+)#([0-9]+) ]]; then
               OWNER="${BASH_REMATCH[1]}"
               REPO="${BASH_REMATCH[2]}"
               OTHER_PR="${BASH_REMATCH[3]}"

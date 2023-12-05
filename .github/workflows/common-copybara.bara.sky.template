@@ -29,11 +29,11 @@ os_config = {
 }
 
 def add_comment_with_shadow_pr(ctx):
-   ctx.console.info("Updating original PR description with info about internal PR")
+   ctx.console.info("Adding comment about internal PR to the original PR")
    pr_number = ctx.revision.labels["GITHUB_PR_NUMBER"][0]
    for effect in ctx.effects:
        if effect.type == "CREATED" and effect.destination_ref != None and effect.destination_ref.url != None:
-              ctx.origin.post_issue_comment(int(pr_number), "Closes " + effect.destination_ref.url.replace("https://github.com/","").replace("/pull/","#"))
+              ctx.origin.post_issue_comment(int(pr_number), "Internal PR " + effect.destination_ref.url.replace("https://github.com/","").replace("/pull/","#") + "\nInternal message only. Nothing to see here, move along")
 
 def pr_workflow(config, repo_config):
    core.workflow(
