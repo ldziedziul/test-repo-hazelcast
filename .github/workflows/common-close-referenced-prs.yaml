@@ -24,7 +24,7 @@ jobs:
             if [[ $line =~ (Closes|Internal\ PR)\ ([^/]+)/([^/]+)#([0-9]+) ]]; then
               OWNER="${BASH_REMATCH[2]}"
               REPO="${BASH_REMATCH[3]}"
-              OTHER_PR="${BASH_REMATCH[3]}"
+              OTHER_PR="${BASH_REMATCH[4]}"
               echo "Closing PR: $OWNER/$REPO/$OTHER_PR"
               REASON=${{ github.event.pull_request.merged && 'merged' || 'closed' }}
               MESSAGE="This pull request has been closed because it was already $REASON as https://github.com/${{ github.repository }}/pull/${PR_NUMBER}"
