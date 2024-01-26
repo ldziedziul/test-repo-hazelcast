@@ -10,6 +10,7 @@ on:
       - "data-migration-5.3"
     types:
       - closed
+      - converted_to_draft
 jobs:
   close-referenced-prs:
     name: Close referenced PRs
@@ -26,7 +27,17 @@ jobs:
               REPO="${BASH_REMATCH[3]}"
               OTHER_PR="${BASH_REMATCH[4]}"
               echo "Closing PR: $OWNER/$REPO/$OTHER_PR"
-              REASON=${{ github.event.pull_request.merged && 'merged' || 'closed' }}
+
+              if [[ ${{ github.event.pull_request.draft }} ]]
+              then
+                REASON='converted to draft'
+              elif [[ ${{ github.event.pull_request.merged }} ]]
+              then
+                REASON="merged"
+              else
+                REASON="close"
+              fi
+
               MESSAGE="This pull request has been closed because it was already $REASON as https://github.com/${{ github.repository }}/pull/${PR_NUMBER}"
               PR_CLOSED=$(gh pr view --repo "$OWNER/$REPO" $OTHER_PR --json closed -q '.closed')
               if [ "$PR_CLOSED" == "false" ]; then
@@ -36,3 +47,11 @@ jobs:
           done <<< "$CONTENT"
         env:
           GH_TOKEN: ${{ secrets.DEVOPSHAZELCAST_PAT_FOR_MONOREPO }}
+      - uses: 8398a7/action-slack@v3
+        if: failure()
+        with:
+          fields: repo,message,author,action,eventName,workflow,job,pullRequest
+          status: failure
+          channel: "#monorepo-notifications"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_MONOREPO }}

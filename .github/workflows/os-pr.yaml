@@ -13,17 +13,19 @@ on:
       - opened
       - synchronize
       - edited
+      - ready_for_review
 env:
   branch_to_sync: ${{ github.base_ref || github.ref_name}}
   sot_repo: hazelcast/test-repo-hazelcast-mono
   destination_repo: hazelcast/test-repo-hazelcast
 jobs:
   copybara-os-pr:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Reopen referenced PRs
-        if: github.event.action == 'reopened'
+        if: github.event.action == 'reopened' || github.event.action == 'ready_for_review'
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
           CONTENT="$(gh pr view "$PR_NUMBER" --json "body,comments" -q '.body, .comments[].body' | tac)"
@@ -75,3 +77,11 @@ jobs:
           done <<< "$CONTENT"
         env:
           GH_TOKEN: ${{ secrets.DEVOPSHAZELCAST_PAT_FOR_MONOREPO }}
+      - uses: 8398a7/action-slack@v3
+        if: failure()
+        with:
+            fields: repo,message,author,action,eventName,workflow,job,pullRequest
+            status: failure
+            channel: "#monorepo-notifications"
+        env:
+            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_MONOREPO }}
